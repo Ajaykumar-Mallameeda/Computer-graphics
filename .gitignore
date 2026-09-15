@@ -1,0 +1,30 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# Compiled binaries
+*.exe
+*.dll
+*.obj
+*.o
+*.a
+*.lib
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+Makefile
+build.ninja
+.ninja_deps
+.ninja_log
+
+# IDE files
+.vscode/
+.vs/
+
+# OS files
+Thumbs.db
+.DS_Store
