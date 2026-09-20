@@ -6,6 +6,7 @@
 #include "Cube.h"
 #include "Shader.h"
 #include "Math.h"
+#include "RasterModel.h"
 
 
 class Renderer
@@ -17,7 +18,8 @@ public:
 
     void initialize(
         const Grid& grid,
-        const Cube& cube
+        const Cube& cube,
+        const RasterModel& rasterModel
     );
 
     void setShader(
@@ -43,6 +45,8 @@ public:
         float g,
         float b
     ) const;
+
+    void drawRasterModel() const;
 private:
     GLuint gridVAO;
     GLuint gridVBO;
@@ -50,8 +54,12 @@ private:
     GLuint cubeVAO;
     GLuint cubeVBO;
 
+    GLuint rasterModelVAO;
+    GLuint rasterModelVBO;
+
     int gridVertexCount;
     int cubeVertexCount;
+    int rasterModelVertexCount;
 
     Shader* shader;
 

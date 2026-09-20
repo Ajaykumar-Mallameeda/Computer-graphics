@@ -6,6 +6,8 @@ Renderer::Renderer()
       gridVBO(0),
       cubeVAO(0),
       cubeVBO(0),
+      rasterModelVAO(0),
+      rasterModelVBO(0),
       gridVertexCount(0),
       cubeVertexCount(0),
       shader(nullptr),
@@ -34,7 +36,15 @@ Renderer::~Renderer()
     {
         glDeleteVertexArrays(1, &gridVAO);
     }
+    if (rasterModelVBO != 0)
+    {
+        glDeleteBuffers(1, &rasterModelVBO);
+    }
 
+    if (rasterModelVAO != 0)
+    {
+        glDeleteVertexArrays(1, &rasterModelVAO);
+    }
     if (cubeVBO != 0)
     {
         glDeleteBuffers(1, &cubeVBO);
@@ -49,7 +59,8 @@ Renderer::~Renderer()
 
 void Renderer::initialize(
     const Grid& grid,
-    const Cube& cube)
+    const Cube& cube,
+    const RasterModel& rasterModel)
 {
     // -----------------------------
     // Grid
@@ -104,10 +115,63 @@ void Renderer::initialize(
     glBindVertexArray(0);
 
 
+
+    // -----------------------------
+    // Raster Model
+    // -----------------------------
+
+    const std::vector<float>& rasterVertices =
+        rasterModel.getVertices();
+
+    rasterModelVertexCount =
+        rasterModel.getVertexCount();
+
+    glGenVertexArrays(
+        1,
+        &rasterModelVAO
+    );
+
+    glGenBuffers(
+        1,
+        &rasterModelVBO
+    );
+
+    glBindVertexArray(
+        rasterModelVAO
+    );
+
+    glBindBuffer(
+        GL_ARRAY_BUFFER,
+        rasterModelVBO
+    );
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        rasterVertices.size() * sizeof(float),
+        rasterVertices.data(),
+        GL_STATIC_DRAW
+    );
+
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        3 * sizeof(float),
+        nullptr
+    );
+
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(
+        GL_ARRAY_BUFFER,
+        0
+    );
+
+    glBindVertexArray(0);
     // -----------------------------
     // Cube
     // -----------------------------
-
     const std::vector<float>& cubeVertices =
         cube.getVertices();
 
@@ -401,6 +465,95 @@ void Renderer::drawCube(
         cubeVertexCount
     );
 
+
+    glBindVertexArray(0);
+}
+
+void Renderer::drawRasterModel() const
+{
+    if (shader == nullptr)
+    {
+        return;
+    }
+
+    shader->use();
+
+
+    // Position the raster model
+
+
+    Mat4 modelTranslation =
+        Mat4::translation(
+            2.5f,
+            2.5f,
+            2.5f
+        );
+
+
+    // Rotate with the grid
+
+
+    Mat4 rotationYMatrix =
+        Mat4::rotationY(
+            rotationY
+        );
+
+    Mat4 rotationXMatrix =
+        Mat4::rotationX(
+            rotationX
+        );
+
+    Mat4 model =
+        modelTranslation *
+        rotationYMatrix *
+        rotationXMatrix;
+
+    Mat4 mvp =
+        viewProjection * model;
+
+    GLint mvpLocation =
+        glGetUniformLocation(
+            shader->getProgram(),
+            "uMVP"
+        );
+
+    glUniformMatrix4fv(
+        mvpLocation,
+        1,
+        GL_FALSE,
+        mvp.m
+    );
+
+
+    // Model color
+
+
+    GLint colorLocation =
+        glGetUniformLocation(
+            shader->getProgram(),
+            "uColor"
+        );
+
+    glUniform3f(
+        colorLocation,
+        1.0f,
+        0.4f,
+        0.1f
+    );
+
+
+    // Draw rasterized lines
+
+
+    glBindVertexArray(
+        rasterModelVAO
+    );
+
+    glDrawArrays(
+        GL_LINES,
+        0,
+        rasterModelVertexCount
+    );
 
     glBindVertexArray(0);
 }

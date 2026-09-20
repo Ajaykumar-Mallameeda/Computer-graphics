@@ -28,8 +28,14 @@ add_executable(Project-1
     src/Cube.cpp
     src/Cube.h
 
+    src/FloodFill.cpp
+    src/FloodFill.h
+
+    src/RasterModel.cpp
+    src/RasterModel.h
+
     src/Renderer.cpp
-    src/Renderer.h 
+    src/Renderer.h
 
     src/Math.cpp
     src/Math.h
