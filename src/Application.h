@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "Shader.h"
 #include "Math.h"
+#include "FloodFill.h"
 
 
 struct FilledCell
@@ -27,17 +28,30 @@ struct FilledCell
 class Application
 {
 public:
+
     Application();
 
     bool initialize();
-
     void run();
-
     void shutdown();
 
+
 private:
+
+    // Input
     void processInput();
 
+    // Mouse
+    void processMouse(double xpos, double ypos);
+
+    static void mouseCallback(
+        GLFWwindow* window,
+        double xpos,
+        double ypos
+    );
+
+
+    // Other functions
     void updateMVP();
 
     void changeCubeColor();
@@ -46,42 +60,62 @@ private:
 
     void clearCurrentCell();
 
+    void floodFillCurrentCell();
+
+    void undoFloodFill();
+
+
     bool isCellFilled(
         int x,
         int y,
         int z
     ) const;
 
+
+    // Window
     GLFWwindow* window;
 
     int width;
     int height;
 
+
+    // Graphics
     Grid grid;
+
     Cube cube;
+
     RasterModel rasterModel;
 
     Renderer renderer;
+
     Shader shader;
 
-    // Current cube position
+
+    // Cube position
     int cubeX;
     int cubeY;
     int cubeZ;
 
-    // Current cube color
+
+    // Cube color
     float cubeR;
     float cubeG;
     float cubeB;
 
-    // Permanently filled cells
+
+    // Filled cells
     std::vector<FilledCell> filledCells;
 
-    // Key state
+    std::vector<FilledCell> lastFloodFillCells;
+
+
+    // Keyboard state
     bool leftWasPressed;
     bool rightWasPressed;
+
     bool upWasPressed;
     bool downWasPressed;
+
     bool uWasPressed;
     bool bWasPressed;
 
@@ -89,15 +123,28 @@ private:
     bool fWasPressed;
     bool wWasPressed;
 
+    bool gWasPressed;
+    bool hWasPressed;
+
     bool lWasPressed;
     bool rWasPressed;
+
     bool tWasPressed;
     bool dWasPressed;
 
+
+    // Rotation
     float rotationX;
     float rotationY;
 
-    // Viewing matrices
+
+    // Mouse state
+    double lastMouseX;
+    double lastMouseY;
+    bool firstMouse;
+
+
+    // Camera
     Mat4 view;
     Mat4 projection;
 };

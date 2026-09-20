@@ -20,6 +20,7 @@ Makefile
 build.ninja
 .ninja_deps
 .ninja_log
+CMakeLists.txt
 
 # IDE files
 .vscode/

@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "RasterModel.h"
+#include "FloodFill.h"
 
 #include <iostream>
 
@@ -29,6 +30,8 @@ Application::Application()
       cWasPressed(false),
       fWasPressed(false),
       wWasPressed(false),
+      gWasPressed(false),
+      hWasPressed(false),
 
       lWasPressed(false),
       rWasPressed(false),
@@ -36,9 +39,92 @@ Application::Application()
       dWasPressed(false),
 
       rotationX(0.0f),
-      rotationY(0.0f)
+      rotationY(0.0f),
+      lastMouseX(400.0),
+      lastMouseY(300.0),
+      firstMouse(true)
 {
 }
+void Application::mouseCallback(
+    GLFWwindow* window,
+    double xpos,
+    double ypos)
+{
+    Application* app =
+        static_cast<Application*>(
+            glfwGetWindowUserPointer(window)
+        );
+
+    if (app)
+    {
+        app->processMouse(xpos, ypos);
+    }
+}
+
+void Application::processMouse(
+    double xpos,
+    double ypos)
+{
+    // Ignore first mouse position.
+    // This prevents a sudden jump in rotation.
+    if (firstMouse)
+    {
+        lastMouseX = xpos;
+        lastMouseY = ypos;
+
+        firstMouse = false;
+
+        return;
+    }
+
+
+    // Calculate mouse movement.
+    double offsetX =
+        xpos - lastMouseX;
+
+    double offsetY =
+        ypos - lastMouseY;
+
+
+    // Store current mouse position.
+    lastMouseX = xpos;
+    lastMouseY = ypos;
+
+
+    // Mouse sensitivity.
+    const float sensitivity = 0.3f;
+
+
+    // -----------------------------------------
+    // Mouse left / right
+    // -----------------------------------------
+
+    rotationY +=
+        static_cast<float>(
+            offsetX
+        ) * sensitivity;
+
+
+    // -----------------------------------------
+    // Mouse up / down
+    // -----------------------------------------
+
+    rotationX -=
+        static_cast<float>(
+            offsetY
+        ) * sensitivity;
+
+
+    // -----------------------------------------
+    // Apply rotation
+    // -----------------------------------------
+
+    renderer.setRotation(
+        rotationX,
+        rotationY
+    );
+}
+
 
 
 bool Application::initialize()
@@ -103,6 +189,15 @@ bool Application::initialize()
 
     glfwMakeContextCurrent(window);
 
+     glfwSetWindowUserPointer(
+        window,
+        this
+    );
+
+    glfwSetCursorPosCallback(
+        window,
+        Application::mouseCallback
+    );
 
     // -----------------------------
     // GLEW
@@ -577,7 +672,44 @@ if (dPressed && !dWasPressed)
 
 dWasPressed =
     dPressed;
+
+// ==========================================
+// G — FLOOD FILL
+// ==========================================
+
+bool gPressed =
+    glfwGetKey(
+        window,
+        GLFW_KEY_G
+    ) == GLFW_PRESS;
+
+if (gPressed && !gWasPressed)
+{
+    floodFillCurrentCell();
 }
+
+gWasPressed =
+    gPressed;
+
+// ==========================================
+// H — UNDO FLOOD FILL
+// ==========================================
+
+bool hPressed =
+    glfwGetKey(
+        window,
+        GLFW_KEY_H
+    ) == GLFW_PRESS;
+
+if (hPressed && !hWasPressed)
+{
+    undoFloodFill();
+}
+
+hWasPressed =
+    hPressed;
+}
+
 
 
 void Application::changeCubeColor()
@@ -752,6 +884,115 @@ void Application::clearCurrentCell()
         << cubeZ << ")\n";
 }
 
+void Application::floodFillCurrentCell()
+{
+    std::cout
+        << "\nStarting 3D Flood Fill from ("
+        << cubeX << ", "
+        << cubeY << ", "
+        << cubeZ << ")\n";
+
+
+    // Convert existing FilledCell objects
+    // into FloodFillCell objects.
+    std::vector<FloodFillCell> existingCells;
+
+    for (const FilledCell& cell : filledCells)
+    {
+        FloodFillCell floodCell;
+
+        floodCell.x = cell.x;
+        floodCell.y = cell.y;
+        floodCell.z = cell.z;
+
+        existingCells.push_back(floodCell);
+    }
+
+
+    // Run Flood Fill.
+    std::vector<FloodFillCell> result =
+        FloodFill::fill(
+            cubeX,
+            cubeY,
+            cubeZ,
+            grid.getSize(),
+            existingCells
+        );
+
+
+    // Clear the previous undo information.
+    lastFloodFillCells.clear();
+
+
+    // Add newly filled cells.
+    for (const FloodFillCell& cell : result)
+    {
+        FilledCell filledCell;
+
+        filledCell.x = cell.x;
+        filledCell.y = cell.y;
+        filledCell.z = cell.z;
+
+        filledCell.r = cubeR;
+        filledCell.g = cubeG;
+        filledCell.b = cubeB;
+
+        filledCells.push_back(filledCell);
+
+        // Remember this cell for Undo.
+        lastFloodFillCells.push_back(filledCell);
+    }
+
+
+    std::cout
+        << "Flood Fill completed. "
+        << result.size()
+        << " cells filled.\n";
+}
+
+void Application::undoFloodFill()
+{
+    if (lastFloodFillCells.empty())
+    {
+        std::cout
+            << "Nothing to undo.\n";
+
+        return;
+    }
+
+
+    int removedCount = 0;
+
+
+    for (const FilledCell& floodCell :
+         lastFloodFillCells)
+    {
+        for (auto it = filledCells.begin();
+             it != filledCells.end();
+             ++it)
+        {
+            if (it->x == floodCell.x &&
+                it->y == floodCell.y &&
+                it->z == floodCell.z)
+            {
+                filledCells.erase(it);
+
+                removedCount++;
+
+                break;
+            }
+        }
+    }
+
+
+    lastFloodFillCells.clear();
+
+
+    std::cout
+        << "Undo Flood Fill: "
+        << removedCount
+        << " cells removed.\n";
+}
 
 void Application::updateMVP()
 {
