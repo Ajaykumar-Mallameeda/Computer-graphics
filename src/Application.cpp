@@ -7,8 +7,8 @@
 
 Application::Application()
     : window(nullptr),
-      width(800),
-      height(600),
+      width(1100),
+      height(900),
       grid(5),
       cube(),
       rasterModel(),
@@ -92,7 +92,7 @@ void Application::processMouse(
 
 
     // Mouse sensitivity.
-    const float sensitivity = 0.3f;
+    const float sensitivity = 0.1f;
 
 
     // -----------------------------------------
@@ -100,9 +100,7 @@ void Application::processMouse(
     // -----------------------------------------
 
     rotationY +=
-        static_cast<float>(
-            offsetX
-        ) * sensitivity;
+        static_cast<float>(offsetX) * sensitivity;
 
 
     // -----------------------------------------
@@ -110,9 +108,7 @@ void Application::processMouse(
     // -----------------------------------------
 
     rotationX -=
-        static_cast<float>(
-            offsetY
-        ) * sensitivity;
+        static_cast<float>(offsetY) * sensitivity;
 
 
     // -----------------------------------------
@@ -994,13 +990,6 @@ void Application::undoFloodFill()
         << " cells removed.\n";
 }
 
-void Application::updateMVP()
-{
-    // No longer needed for CP-5.
-    //
-    // Renderer now receives ViewProjection
-    // and creates a Model matrix for each cube.
-}
 
 
 void Application::run()

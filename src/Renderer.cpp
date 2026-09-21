@@ -544,7 +544,6 @@ void Renderer::drawRasterModel() const
 
     // Draw rasterized lines
 
-
     glBindVertexArray(
         rasterModelVAO
     );
